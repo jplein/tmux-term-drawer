@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jplein/dotfiles/bin/src/tmux-term-drawer/drawer"
+	"github.com/jplein/tmux-term-drawer/drawer"
 )
 
 func handleError(err error) {

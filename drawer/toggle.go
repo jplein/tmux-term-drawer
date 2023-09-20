@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jplein/dotfiles/bin/src/tmux-term-drawer/window"
 	"github.com/jplein/tmux"
+	"github.com/jplein/tmux-term-drawer/window"
 )
 
 // The name of the new tmux session that hidden panes are moved to
