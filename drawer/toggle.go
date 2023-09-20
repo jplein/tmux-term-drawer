@@ -11,9 +11,6 @@ import (
 	"github.com/jplein/tmux-term-drawer/window"
 )
 
-// The name of the new tmux session that hidden panes are moved to
-const DrawerSessionName = "term-drawer"
-
 func getActivePID(r *tmux.Runner) (int, error) {
 	result, err := r.Run("display-message -p -F '#{pid}'")
 	if err != nil {
@@ -54,23 +51,93 @@ func makeMapFile(r *tmux.Runner) error {
 	return m.Write()
 }
 
+func getPositionArgument(c window.Config) (string, error) {
+	var positionArgument string = ""
+	switch c.Position {
+	case window.Top:
+		positionArgument = "-b"
+	case window.Left:
+		positionArgument = "-b"
+	case window.Bottom:
+		positionArgument = ""
+	case window.Right:
+		positionArgument = ""
+	default:
+		return "", fmt.Errorf("invalid value for config.Position: %s", c.Position)
+	}
+	return positionArgument, nil
+}
+
+func getDrawerSize(windowWidth, windowHeight int, c window.Config) (int, error) {
+	size := 0
+	switch {
+	case c.Units == window.Absolute:
+		size = int(c.Size)
+	case c.Units == window.Percent && (c.Position == window.Bottom || c.Position == window.Top):
+		size = int(math.Round(float64(windowHeight) * (float64(c.Size) / 100.0)))
+	case c.Units == window.Percent && (c.Position == window.Left || c.Position == window.Right):
+		size = int(math.Round(float64(windowWidth) * (float64(c.Size) / 100.0)))
+	default:
+		return 0, fmt.Errorf("this should not happen: how did I get to the default case?")
+	}
+	return size, nil
+}
+
+func getSplitParam(c window.Config) (string, error) {
+	var splitParam string
+	switch c.Position {
+	case window.Top:
+		splitParam = "-v"
+	case window.Bottom:
+		splitParam = "-v"
+	case window.Left:
+		splitParam = "-h"
+	case window.Right:
+		splitParam = "-h"
+	default:
+		return "", fmt.Errorf("this should not happen: how did I get to the default case?")
+	}
+	return splitParam, nil
+}
+
 func createDrawer(r *tmux.Runner, activeWindow string) (string, error) {
 	var err error
 
-	var width int
-	if width, _, err = r.GetWindowDimensions(activeWindow); err != nil {
+	config := window.Config{}
+	err = config.Read()
+	if err != nil {
 		return "", err
 	}
 
-	newWidth := int(math.Round(float64(width) / 3.0))
+	var width, height int
+	if width, height, err = r.GetWindowDimensions(activeWindow); err != nil {
+		return "", err
+	}
+
+	positionArgument, err := getPositionArgument(config)
+	if err != nil {
+		return "", err
+	}
+
+	newDimensions, err := getDrawerSize(width, height, config)
+	if err != nil {
+		return "", err
+	}
+
+	splitParam, err := getSplitParam(config)
+	if err != nil {
+		return "", err
+	}
 
 	var output string
-	if output, err = r.Run(
-		fmt.Sprintf(
-			"split-window -h -f -l %d -P -F '#{pane_id}'",
-			newWidth,
-		),
-	); err != nil {
+	cmd := fmt.Sprintf(
+		"split-window %s -f %s -l %d -P -F '#{pane_id}'",
+		splitParam,
+		positionArgument,
+		newDimensions,
+	)
+
+	if output, err = r.Run(cmd); err != nil {
 		return "", err
 	}
 
@@ -174,17 +241,40 @@ func showDrawer(r *tmux.Runner, pane, activeSession, activeWindow string) error 
 		return err
 	}
 
-	var width int
-	if width, _, err = r.GetWindowDimensions(activeWindow); err != nil {
+	config := window.Config{}
+	err = config.Read()
+	if err != nil {
 		return err
 	}
 
-	newWidth := int(math.Round(float64(width) / 3.0))
+	var width, height int
+	if width, height, err = r.GetWindowDimensions(activeWindow); err != nil {
+		return err
+	}
+
+	positionArgument, err := getPositionArgument(config)
+	if err != nil {
+		return err
+	}
+
+	newDimensions, err := getDrawerSize(width, height, config)
+	if err != nil {
+		return err
+	}
+
+	splitParam, err := getSplitParam(config)
+	if err != nil {
+		return err
+	}
+
 	var dest = fmt.Sprintf("%s:%s", activeSession, activeWindow)
 	// 'move-pane', '-h', '-f', '-s', sourceString, '-t', `${session}:${window}`
+
 	var cmd string = fmt.Sprintf(
-		"move-pane -h -l %d -f -s '%s' -t '%s'",
-		newWidth,
+		"move-pane %s -l %d -f %s -s '%s' -t '%s'",
+		splitParam,
+		newDimensions,
+		positionArgument,
 		source,
 		dest,
 	)
@@ -242,7 +332,11 @@ func getPaneWindow(r *tmux.Runner, pane string) (string, error) {
 }
 
 func Toggle() error {
-	var err error
+	config := window.Config{}
+	err := config.Read()
+	if err != nil {
+		return err
+	}
 
 	var activeSession string
 	if activeSession, err = tmux.GetActiveSession(); err != nil {
@@ -267,7 +361,7 @@ func Toggle() error {
 	if err = r.AttachSession(activeSession); err != nil {
 		return err
 	}
-	if err = r.StartSession(DrawerSessionName); err != nil {
+	if err = r.StartSession(config.SessionName); err != nil {
 		return err
 	}
 
@@ -317,7 +411,7 @@ func Toggle() error {
 			return err
 		}
 	} else if paneVisible {
-		if err = hideDrawer(r, pane, DrawerSessionName); err != nil {
+		if err = hideDrawer(r, pane, config.SessionName); err != nil {
 			return err
 		}
 	} else {
