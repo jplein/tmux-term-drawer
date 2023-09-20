@@ -22,7 +22,6 @@ tmux-term-drawer:
     # The size of the drawer. If units is 'percent', the height or width of the
     # drawer is a percentage of the active window's height or width. If units is
     # 'character', the drawer is a fixed number of characters.
-
     size: 30
     units: percent
 
