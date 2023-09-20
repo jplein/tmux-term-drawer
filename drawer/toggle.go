@@ -269,8 +269,6 @@ func showDrawer(r *tmux.Runner, pane, activeSession, activeWindow string) error 
 	}
 
 	var dest = fmt.Sprintf("%s:%s", activeSession, activeWindow)
-	// 'move-pane', '-h', '-f', '-s', sourceString, '-t', `${session}:${window}`
-
 	var cmd string = fmt.Sprintf(
 		"move-pane %s -l %d -f %s -s '%s' -t '%s'",
 		splitParam,
