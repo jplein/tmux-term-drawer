@@ -8,7 +8,8 @@ import (
 	"strings"
 
 	"github.com/jplein/tmux"
-	"github.com/jplein/tmux-term-drawer/window"
+	config "github.com/jplein/tmux-term-drawer/config"
+	window "github.com/jplein/tmux-term-drawer/window"
 )
 
 func getActivePID(r *tmux.Runner) (int, error) {
@@ -51,16 +52,16 @@ func makeMapFile(r *tmux.Runner) error {
 	return m.Write()
 }
 
-func getPositionArgument(c window.Config) (string, error) {
+func getPositionArgument(c config.Config) (string, error) {
 	var positionArgument string = ""
 	switch c.Position {
-	case window.Top:
+	case config.Top:
 		positionArgument = "-b"
-	case window.Left:
+	case config.Left:
 		positionArgument = "-b"
-	case window.Bottom:
+	case config.Bottom:
 		positionArgument = ""
-	case window.Right:
+	case config.Right:
 		positionArgument = ""
 	default:
 		return "", fmt.Errorf("invalid value for config.Position: %s", c.Position)
@@ -68,14 +69,14 @@ func getPositionArgument(c window.Config) (string, error) {
 	return positionArgument, nil
 }
 
-func getDrawerSize(windowWidth, windowHeight int, c window.Config) (int, error) {
+func getDrawerSize(windowWidth, windowHeight int, c config.Config) (int, error) {
 	size := 0
 	switch {
-	case c.Units == window.Absolute:
+	case c.Units == config.Absolute:
 		size = int(c.Size)
-	case c.Units == window.Percent && (c.Position == window.Bottom || c.Position == window.Top):
+	case c.Units == config.Percent && (c.Position == config.Bottom || c.Position == config.Top):
 		size = int(math.Round(float64(windowHeight) * (float64(c.Size) / 100.0)))
-	case c.Units == window.Percent && (c.Position == window.Left || c.Position == window.Right):
+	case c.Units == config.Percent && (c.Position == config.Left || c.Position == config.Right):
 		size = int(math.Round(float64(windowWidth) * (float64(c.Size) / 100.0)))
 	default:
 		return 0, fmt.Errorf("this should not happen: how did I get to the default case?")
@@ -83,16 +84,16 @@ func getDrawerSize(windowWidth, windowHeight int, c window.Config) (int, error) 
 	return size, nil
 }
 
-func getSplitParam(c window.Config) (string, error) {
+func getSplitParam(c config.Config) (string, error) {
 	var splitParam string
 	switch c.Position {
-	case window.Top:
+	case config.Top:
 		splitParam = "-v"
-	case window.Bottom:
+	case config.Bottom:
 		splitParam = "-v"
-	case window.Left:
+	case config.Left:
 		splitParam = "-h"
-	case window.Right:
+	case config.Right:
 		splitParam = "-h"
 	default:
 		return "", fmt.Errorf("this should not happen: how did I get to the default case?")
@@ -103,7 +104,7 @@ func getSplitParam(c window.Config) (string, error) {
 func createDrawer(r *tmux.Runner, activeWindow string) (string, error) {
 	var err error
 
-	config := window.Config{}
+	config := config.Config{}
 	err = config.Read()
 	if err != nil {
 		return "", err
@@ -241,7 +242,7 @@ func showDrawer(r *tmux.Runner, pane, activeSession, activeWindow string) error 
 		return err
 	}
 
-	config := window.Config{}
+	config := config.Config{}
 	err = config.Read()
 	if err != nil {
 		return err
@@ -332,7 +333,7 @@ func getPaneWindow(r *tmux.Runner, pane string) (string, error) {
 }
 
 func Toggle() error {
-	config := window.Config{}
+	config := config.Config{}
 	err := config.Read()
 	if err != nil {
 		return err
