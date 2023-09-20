@@ -1,6 +1,6 @@
 # tmux-term-drawer
 
-In tmux, toggles a terminal drawer on the right on and off
+In tmux, toggles a terminal drawer on and off.
 
 ## Installation
 
