@@ -72,7 +72,7 @@ func getPositionArgument(c config.Config) (string, error) {
 func getDrawerSize(windowWidth, windowHeight int, c config.Config) (int, error) {
 	size := 0
 	switch {
-	case c.Units == config.Absolute:
+	case c.Units == config.Block:
 		size = int(c.Size)
 	case c.Units == config.Percent && (c.Position == config.Bottom || c.Position == config.Top):
 		size = int(math.Round(float64(windowHeight) * (float64(c.Size) / 100.0)))

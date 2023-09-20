@@ -25,8 +25,8 @@ const DefaultPosition = Right
 type Units string
 
 const (
-	Absolute Units = "absolute"
-	Percent  Units = "percent"
+	Block   Units = "block"
+	Percent Units = "percent"
 )
 
 const DefaultUnits = Percent
@@ -92,8 +92,8 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("invalid position: '%s', valid values: %s, %s, %s, %s", c.Position, Top, Bottom, Left, Right)
 	case c.Size <= 0:
 		return fmt.Errorf("invalid width: %d, expected number greater than 0", c.Size)
-	case c.Units != Absolute && c.Units != Percent:
-		return fmt.Errorf("invalid units: '%s', valid values: %s, %s", c.Units, Absolute, Percent)
+	case c.Units != Block && c.Units != Percent:
+		return fmt.Errorf("invalid units: '%s', valid values: %s, %s", c.Units, Block, Percent)
 	case c.SessionName == "":
 		return fmt.Errorf("invalid session name: '%s', expected non-empty string", c.SessionName)
 	default:
