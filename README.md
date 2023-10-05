@@ -43,11 +43,3 @@ tmux-term-drawer:
     # session which holds the drawer when it is hidden
     sessionName: term-drawer
 ```
-
-## Building
-
-The `tmux` dependency is in a private repo, [jplein/tmux](https://github.com/jplein/tmux). You'll need to mark the repository private in order to pull it down, by running a command like this:
-
-```
-export GOPRIVATE=github.com/jplein
-```
