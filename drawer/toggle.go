@@ -147,10 +147,6 @@ func createDrawer(r *tmux.Runner, activeWindow string) (string, error) {
 	return pane, nil
 }
 
-// Maximum number of panes per window in the session in which the drawer is
-// temporarily stashed
-const MaxPaneCount = 3
-
 func getSourceStringForMovePane(r *tmux.Runner, pane string) (string, error) {
 	var err error
 
@@ -168,62 +164,14 @@ func getSourceStringForMovePane(r *tmux.Runner, pane string) (string, error) {
 
 func hideDrawer(r *tmux.Runner, pane string, stashSession string) error {
 	var err error
-
-	var output string
-	var cmd string = fmt.Sprintf(
-		"list-panes -a -F '#{window_id} #{window_panes}' -f '#{m:#{session_name},%s}'",
-		stashSession,
-	)
-	if output, err = r.Run(cmd); err != nil {
-		return err
-	}
-
-	var stashWindow string = ""
-	var maxWindowId = -1
-
-	lines := strings.Split(tmux.Trim(output), "\n")
-	for _, line := range lines {
-		elems := strings.Split(line, " ")
-		if len(elems) != 2 {
-			return fmt.Errorf("badly formed element in list of window counts: expected two elements separated by a space but found '%s'", line)
-		}
-
-		// the window name, in a form like "@17"
-		window := elems[0]
-
-		// window ID as a number
-		var windowId int
-		if windowId, err = strconv.Atoi(window[1:]); err != nil {
-			return err
-		}
-		if windowId > maxWindowId {
-			maxWindowId = windowId
-		}
-
-		var paneCount int
-		if paneCount, err = strconv.Atoi(elems[1]); err != nil {
-			return err
-		}
-
-		if paneCount < MaxPaneCount && stashWindow == "" {
-			stashWindow = window
-		}
-	}
-
-	if stashWindow == "" {
-		// create a new window
-		if _, err = r.Run(fmt.Sprintf("new-window -a -t %s:%d", stashSession, maxWindowId)); err != nil {
-			return err
-		}
-	}
-
 	var source string
+
 	if source, err = getSourceStringForMovePane(r, pane); err != nil {
 		return err
 	}
-	var target = fmt.Sprintf("%s:%s", stashSession, stashWindow)
-	cmd = fmt.Sprintf(
-		"move-pane -s '%s' -t '%s'",
+	var target = fmt.Sprintf("%s:{end}", stashSession)
+	cmd := fmt.Sprintf(
+		"break-pane -s '%s' -a -t '%s'",
 		source,
 		target,
 	)
