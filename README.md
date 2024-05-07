@@ -18,7 +18,7 @@ If you're using the default tmux prefix of `control-b`, you would type `control-
 
 ## Requirements
 
-Requires tmux 3.3a. It may work with other versions, but I've received a report of it failing with tmux 3.1, and it has not been tested with 3.2, 3.3, or 3.4. 
+Requires tmux 3.3a or 3.4. It may work with other versions, but I've received a report of it failing with tmux 3.1, and it has not been tested with 3.2 or 3.3.
 
 It is known to work macOS, Debian, and Ubuntu. I have not tested it on Windows, and do not have a Windows install to test it on.
 
