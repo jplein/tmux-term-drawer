@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -13,7 +14,12 @@ func handleError(err error) {
 }
 
 func main() {
-	err := drawer.Toggle()
+	var socketName string
+	flag.StringVar(&socketName, "socket", "", "The name of the tmux socket to use")
+
+	flag.Parse()
+
+	err := drawer.Toggle(socketName)
 	if err != nil {
 		handleError(err)
 	}

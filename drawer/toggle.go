@@ -32,6 +32,7 @@ func makeMapFile(r *tmux.Runner) error {
 	}
 
 	var m window.Map
+	m.Socket = r.Config.Socket
 
 	err = m.Read()
 	if err != nil {
@@ -278,7 +279,7 @@ func getPaneWindow(r *tmux.Runner, pane string) (string, error) {
 	return tmux.Trim(output), nil
 }
 
-func Toggle() error {
+func Toggle(socketName string) error {
 	config := config.Config{}
 	err := config.Read()
 	if err != nil {
@@ -286,12 +287,12 @@ func Toggle() error {
 	}
 
 	var activeSession string
-	if activeSession, err = tmux.GetActiveSession(); err != nil {
+	if activeSession, err = tmux.GetActiveSession(tmux.Config{Socket: socketName}); err != nil {
 		return err
 	}
 
 	var r *tmux.Runner = &tmux.Runner{}
-	if err = r.Init(); err != nil {
+	if err = r.Init(tmux.Config{Socket: socketName}); err != nil {
 		return err
 	}
 
@@ -318,6 +319,8 @@ func Toggle() error {
 	}
 
 	var m window.Map
+	m.Socket = socketName
+
 	if err = m.Initialize(); err != nil {
 		return err
 	}

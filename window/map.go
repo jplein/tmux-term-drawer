@@ -7,7 +7,7 @@ import (
 	"path"
 )
 
-const WindowMapFilename = ".term-drawer-pane-map.json"
+const WindowMapPrefix = ".term-drawer-pane-map"
 
 type Map struct {
 	// The process ID of the running tmux server
@@ -16,6 +16,8 @@ type Map struct {
 	// A map of windows to drawer panes. Each key is the ID of a tmux window, each
 	// value is the ID of the drawer pane for that window.
 	Panes map[string]string `json:"panes,omitempty"`
+
+	Socket string
 }
 
 func (m *Map) FromJSON(j []byte) error {
@@ -28,7 +30,15 @@ func (m *Map) configFile() (string, error) {
 		return "", err
 	}
 
-	return path.Join(home, WindowMapFilename), nil
+	var filename string
+
+	if m.Socket != "" {
+		filename = WindowMapPrefix + "-" + m.Socket + ".json"
+	} else {
+		filename = WindowMapPrefix + ".json"
+	}
+
+	return path.Join(home, filename), nil
 }
 
 func (m *Map) fromFile(file string) error {
