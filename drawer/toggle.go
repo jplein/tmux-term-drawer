@@ -131,13 +131,26 @@ func createDrawer(r *tmux.Runner, activeWindow string) (string, error) {
 		return "", err
 	}
 
+	activePane, err := r.GetActivePane()
+	if err != nil {
+		return "", err
+	}
+
+	workingDirectory, err := getPaneWorkingDirectory(r, activePane)
+	if err != nil {
+		return "", err
+	}
+
 	var output string
 	cmd := fmt.Sprintf(
-		"split-window %s -f %s -l %d -P -F '#{pane_id}'",
+		"split-window %s -f %s -l %d -c '%s' -P -F '#{pane_id}'",
 		splitParam,
 		positionArgument,
 		newDimensions,
+		workingDirectory,
 	)
+
+	fmt.Printf("debug: cmd: %s\n", cmd)
 
 	if output, err = r.Run(cmd); err != nil {
 		return "", err
@@ -273,6 +286,18 @@ func getPaneWindow(r *tmux.Runner, pane string) (string, error) {
 
 	var output string
 	if output, err = r.Run(fmt.Sprintf("list-panes -a -F '#{window_id}' -f '#{m:#{pane_id},%s}'", pane)); err != nil {
+		return "", err
+	}
+
+	return tmux.Trim(output), nil
+}
+
+func getPaneWorkingDirectory(r *tmux.Runner, pane string) (string, error) {
+	// 'list-panes', '-a', '-F', '#{pane_current_path}', '-f', `#{m:#{pane_id},${pane}}`
+	var err error
+
+	var output string
+	if output, err = r.Run(fmt.Sprintf("list-panes -a -F '#{pane_current_path}' -f '#{m:#{pane_id},%s}'", pane)); err != nil {
 		return "", err
 	}
 
