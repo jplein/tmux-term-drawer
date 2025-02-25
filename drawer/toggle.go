@@ -150,8 +150,6 @@ func createDrawer(r *tmux.Runner, activeWindow string) (string, error) {
 		workingDirectory,
 	)
 
-	fmt.Printf("debug: cmd: %s\n", cmd)
-
 	if output, err = r.Run(cmd); err != nil {
 		return "", err
 	}
